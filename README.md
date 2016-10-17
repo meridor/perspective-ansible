@@ -3,6 +3,7 @@ This repository contains a dynamic inventory file for [Ansible](http://ansible.c
 
 ## Installation
 Just copy ```perspective-inventory``` file from this repository somewhere on your filesystem or install it with ```pip```: 
+
 ```$ pip install perspective-ansible```
 
 ## Usage
