@@ -1,0 +1,85 @@
+#!/usr/bin/env python
+
+import os
+import sys
+
+import requests
+
+try:
+    import json
+except ImportError:
+    import simplejson as json
+
+
+def die(messages):
+    if type(messages) == 'string':
+        die([messages])
+    else:
+        for message in messages:
+            sys.stderr.write(message)
+        sys.exit(1)
+
+
+def read_config_json():
+    config_file = os.environ['HOME'] + '/.ansible/perspective.json'
+    if not os.path.exists(config_file):
+        die("ERROR: config file %s not found\n" % config_file)
+    try:
+        return json.loads(config_file.read())
+    except:
+        die("ERROR: failed to parse %s as JSON\n" % config_file)
+
+
+def fetch_hosts(config_json):
+    # Request json is:
+    # [{
+    #     "sql": "select * from projects"
+    # }]
+    #
+    # Response json is:
+    # [{
+    #     "status": "success",
+    #     "count": 1,
+    #     "data": {
+    #         "columnName": ["fqdn"],
+    #         "row": [{
+    #             "value": ["test-project.example.com"]
+    #         }]
+    #     },
+    #     "message": ""
+    # }]
+    api_url = config_json['url'] if 'url' in config_json else 'http://localhost:8080/'
+    response = requests.post(api_url, data=[{
+        "sql": "select fqdn from instances order by fqdn"
+    }])
+    if response.status_code != 200:
+        die(
+            "ERROR: failed to fetch data from %s. Server returned %d %s\n" %
+                (api_url, response.status_code, response.reason)
+        )
+    return json.loads(response.text)
+
+
+def print_hosts(hosts_json):
+    if len(hosts_json) > 0:
+        result = hosts_json[0]
+        status = result["status"]
+        if status == "success":
+            data = result["data"]["row"]
+            sys.stdin.write("[all]")
+            if data:
+                for row in data:
+                    fqdn = row["value"][0]
+                    sys.stdin.write(fqdn)
+        else:
+            die("ERROR: SQL request error: %s\n" % (result["message"]))
+
+
+def main():
+    config_json = read_config_json()
+    hosts_json = fetch_hosts(config_json)
+    print_hosts(hosts_json)
+    sys.exit(0)
+
+if __name__ == '__main__':
+    main()
