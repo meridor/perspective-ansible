@@ -50,7 +50,7 @@ def fetch_hosts(config_json):
     # }]
     api_url = config_json['url'] if 'url' in config_json else 'http://localhost:8080/'
     response = requests.post(api_url, data=[{
-        "sql": "select fqdn from instances order by fqdn"
+        "sql": "select name, addresses, fqdn from instances order by fqdn, name"
     }])
     if response.status_code != 200:
         die(
@@ -69,8 +69,14 @@ def print_hosts(hosts_json):
             sys.stdin.write("[all]")
             if data:
                 for row in data:
-                    fqdn = row["value"][0]
-                    sys.stdin.write(fqdn)
+                    name = row["value"][0]
+                    addresses = row["value"][1]
+                    fqdn = row["value"][2]
+                    if (fqdn is None):
+                        address = addresses.splitlines()[0]
+                        sys.stdin.write("%s ansible_host=%s" % (name, address))
+                    else:
+                        sys.stdin.write(fqdn)
         else:
             die("ERROR: SQL request error: %s\n" % (result["message"]))
 
