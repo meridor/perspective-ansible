@@ -25,37 +25,22 @@ def read_config_json():
     if not os.path.exists(config_file):
         die("ERROR: config file %s not found\n" % config_file)
     try:
-        return json.loads(config_file.read())
-    except:
-        die("ERROR: failed to parse %s as JSON\n" % config_file)
+        fd = open(config_file, 'r')
+        return json.loads(fd.read())
+    except Exception as e:
+        die("ERROR: failed to parse %s as JSON: %s\n" % (config_file, e))
 
 
 def fetch_hosts(config_json):
-    # Request json is:
-    # [{
-    #     "sql": "select * from projects"
-    # }]
-    #
-    # Response json is:
-    # [{
-    #     "status": "success",
-    #     "count": 1,
-    #     "data": {
-    #         "columnName": ["fqdn"],
-    #         "row": [{
-    #             "value": ["test-project.example.com"]
-    #         }]
-    #     },
-    #     "message": ""
-    # }]
     api_url = config_json['url'] if 'url' in config_json else 'http://localhost:8080/'
-    response = requests.post(api_url, data=[{
+    query_url = api_url + "query"
+    response = requests.post(query_url, json=[{
         "sql": "select name, addresses, fqdn from instances order by fqdn, name"
     }])
     if response.status_code != 200:
         die(
-            "ERROR: failed to fetch data from %s. Server returned %d %s\n" %
-                (api_url, response.status_code, response.reason)
+            "ERROR: failed to fetch data from %s, server returned: %d %s\n" %
+                (query_url, response.status_code, response.reason)
         )
     return json.loads(response.text)
 

@@ -6,6 +6,15 @@ Just copy ```perspective-inventory``` file from this repository somewhere on you
 
 ```$ pip install perspective-ansible```
 
+## Configuration
+You only need to specify Perspective API connection settings in ```~/.ansible/perspective.json```:
+```
+$ cat ~/.ansible/perspective.json
+{
+    "url": "http://example.com/"
+}
+```
+
 ## Usage
 Use Ansible ```-i``` flag to specify custom inventory file:
 ```
