@@ -51,7 +51,7 @@ def print_hosts(hosts_json):
         status = result["status"]
         if status == "success":
             data = result["data"]["row"]
-            sys.stdin.write("[all]")
+            sys.stdout.write("[all]\n")
             if data:
                 for row in data:
                     name = row["value"][0]
@@ -59,9 +59,9 @@ def print_hosts(hosts_json):
                     fqdn = row["value"][2]
                     if (fqdn is None):
                         address = addresses.splitlines()[0]
-                        sys.stdin.write("%s ansible_host=%s" % (name, address))
+                        sys.stdout.write("%s ansible_host=%s\n" % (name, address))
                     else:
-                        sys.stdin.write(fqdn)
+                        sys.stdout.write(fqdn + "\n")
         else:
             die("ERROR: SQL request error: %s\n" % (result["message"]))
 
