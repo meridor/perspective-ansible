@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import collections
 import os
 import sys
 
@@ -45,13 +45,21 @@ def fetch_hosts(config_json):
     return json.loads(response.text)
 
 
+def to_json(in_dict):
+    return json.dumps(in_dict, sort_keys=True)
+
+
 def print_hosts(hosts_json):
+    groups = collections.defaultdict(list)
+    hostvars = {}
+    all_hosts = []
+    groups['_meta'] = {'hostvars': hostvars}
+    groups['all'] = all_hosts
     if len(hosts_json) > 0:
         result = hosts_json[0]
         status = result["status"]
         if status == "success":
             data = result["data"]["row"]
-            sys.stdout.write("[all]\n")
             if data:
                 for row in data:
                     name = row["value"][0]
@@ -59,9 +67,11 @@ def print_hosts(hosts_json):
                     fqdn = row["value"][2]
                     if (fqdn is None):
                         address = addresses.splitlines()[0]
-                        sys.stdout.write("%s ansible_host=%s\n" % (name, address))
+                        hostvars[name] = {'short_name': name, 'ansible_host': address}
                     else:
-                        sys.stdout.write(fqdn + "\n")
+                        all_hosts.append(fqdn)
+                        hostvars[fqdn] = {'short_name': name}
+                sys.stdout.write(to_json(groups))
         else:
             die("ERROR: SQL request error: %s\n" % (result["message"]))
 
