@@ -18,7 +18,7 @@ $ cat ~/.ansible/perspective.json
 ## Usage
 Use Ansible ```-i``` flag to specify custom inventory file:
 ```
-$ ansible ~(test-vm.*) -i /path/to/perspective-inventory -m ping
+$ ansible ~test-vm.* -i /path/to/perspective-inventory -m ping
 ```
 Alternatively you can specify path to inventory file in Ansible configuration file:
 ```
